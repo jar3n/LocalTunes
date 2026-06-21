@@ -3,10 +3,13 @@
 #import "PlayerController.h"
 #import "NowPlayingViewController.h"
 
-@interface RootViewController () <PlayerControllerDelegate>
+@interface RootViewController () <PlayerControllerDelegate, UISearchBarDelegate>
 @property (nonatomic, strong) UIView *miniPlayerView;
 @property (nonatomic, strong) UILabel *miniPlayerLabel;
 @property (nonatomic, strong) UIButton *miniPlayerPlayPauseButton;
+@property (nonatomic, strong) UISearchBar *searchBar;
+@property (nonatomic, strong) NSArray<Song *> *allSongs;
+@property (nonatomic, strong) NSArray<Song *> *filteredSongs;
 @end
 
 @implementation RootViewController
@@ -29,23 +32,76 @@
 
     [PlayerController sharedPlayer].delegate = self;
 
+    self.searchBar = [[UISearchBar alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, 44)];
+    self.searchBar.delegate = self;
+    self.searchBar.placeholder = @"Search songs or artists";
+    self.tableView.tableHeaderView = self.searchBar;
+
+    self.allSongs = [MusicLibrary sharedLibrary].songs;
+    self.filteredSongs = self.allSongs;
+
     [self setupMiniPlayer];
     [self updateMiniPlayer];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
-    [self.tableView reloadData];
+    self.allSongs = [MusicLibrary sharedLibrary].songs;
+    [self filterSongsWithSearchText:self.searchBar.text];
     [self updateMiniPlayer];
 }
 
 - (void)rescan {
     [[MusicLibrary sharedLibrary] rescan];
-    [self.tableView reloadData];
+    self.allSongs = [MusicLibrary sharedLibrary].songs;
+    [self filterSongsWithSearchText:self.searchBar.text];
 
     if ([MusicLibrary sharedLibrary].songs.count == 0) {
         [self showFolderPath];
     }
+}
+
+#pragma mark - Search
+
+- (void)filterSongsWithSearchText:(NSString *)searchText {
+    if (searchText.length == 0) {
+        self.filteredSongs = self.allSongs;
+    } else {
+        NSMutableArray *result = [NSMutableArray array];
+        for (Song *song in self.allSongs) {
+            BOOL titleMatch = [song.title rangeOfString:searchText options:NSCaseInsensitiveSearch].location != NSNotFound;
+            BOOL artistMatch = [song.artist rangeOfString:searchText options:NSCaseInsensitiveSearch].location != NSNotFound;
+            if (titleMatch || artistMatch) {
+                [result addObject:song];
+            }
+        }
+        self.filteredSongs = result;
+    }
+    [self.tableView reloadData];
+}
+
+#pragma mark - UISearchBarDelegate
+
+- (void)searchBar:(UISearchBar *)searchBar textDidChange:(NSString *)searchText {
+    [self filterSongsWithSearchText:searchText];
+}
+
+- (void)searchBarSearchButtonClicked:(UISearchBar *)searchBar {
+    [searchBar resignFirstResponder];
+}
+
+- (void)searchBarCancelButtonClicked:(UISearchBar *)searchBar {
+    searchBar.text = @"";
+    [self filterSongsWithSearchText:@""];
+    [searchBar resignFirstResponder];
+}
+
+- (void)searchBarTextDidBeginEditing:(UISearchBar *)searchBar {
+    [searchBar setShowsCancelButton:YES animated:YES];
+}
+
+- (void)searchBarTextDidEndEditing:(UISearchBar *)searchBar {
+    [searchBar setShowsCancelButton:NO animated:YES];
 }
 
 - (void)showFolderPath {
@@ -129,7 +185,7 @@
 #pragma mark - UITableViewDataSource
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return [MusicLibrary sharedLibrary].songs.count;
+    return self.filteredSongs.count;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -138,7 +194,7 @@
     if (!cell) {
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:cellId];
     }
-    Song *song = [MusicLibrary sharedLibrary].songs[indexPath.row];
+    Song *song = self.filteredSongs[indexPath.row];
     cell.textLabel.text = song.title;
     cell.detailTextLabel.text = song.artist;
     return cell;
@@ -148,8 +204,7 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
-    NSArray *songs = [MusicLibrary sharedLibrary].songs;
-    [[PlayerController sharedPlayer] playQueue:songs startingAtIndex:indexPath.row];
+    [[PlayerController sharedPlayer] playQueue:self.filteredSongs startingAtIndex:indexPath.row];
     [self updateMiniPlayer];
 }
 
