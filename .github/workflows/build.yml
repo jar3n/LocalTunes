@@ -45,6 +45,39 @@ jobs:
             mv "$f" "$(dirname "$f")/module.modulemap"
           done
 
+      - name: Fix SDK TBD stubs for armv7 device linking
+        run: |
+          SDK=theos/sdks/iPhoneOS9.3.sdk
+
+          # The .tbd files in this community SDK have their targets set to
+          # ios-simulator instead of ios, and liblaunch.dylib is listed as a
+          # re-export of libSystem but has no stub of its own. Both cause
+          # linker errors. Fix them in-place.
+
+          # 1. Patch every .tbd file: replace simulator target triples with
+          #    the matching device ones so ld accepts them for armv7-ios.
+          find "$SDK" -name "*.tbd" | while read f; do
+            sed -i '' \
+              's/i386-ios-simulator/armv7-ios/g;
+               s/x86_64-ios-simulator/arm64-ios/g;
+               s/armv7-apple-ios-simulator/armv7-apple-ios/g' "$f"
+          done
+
+          # 2. Create a minimal liblaunch.tbd stub so ld can resolve the
+          #    re-export reference inside libSystem.tbd.
+          mkdir -p "$SDK/usr/lib/system"
+          printf '%s\n' \
+            '--- !tapi-tbd-v3' \
+            'archs:                 [ armv7, armv7s ]' \
+            'platform:              ios' \
+            'install-name:          /usr/lib/system/liblaunch.dylib' \
+            'current-version:       1.0' \
+            'compatibility-version: 1.0' \
+            'exports:' \
+            '  - archs:             [ armv7, armv7s ]' \
+            '    symbols:           [ ]' \
+            > "$SDK/usr/lib/system/liblaunch.tbd"
+
       - name: Build .deb
         env:
           THEOS: ${{ github.workspace }}/theos
