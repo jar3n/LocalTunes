@@ -1,0 +1,102 @@
+name: Build LocalTunes
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+# Lets the deploy job publish to GitHub Pages.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: brew install ldid xz make
+
+      - name: Checkout Theos
+        uses: actions/checkout@v4
+        with:
+          repository: theos/theos
+          submodules: recursive
+          path: theos
+
+      - name: Install legacy iOS SDK (needed for armv7)
+        run: |
+          git clone --depth 1 https://github.com/theos/sdks.git /tmp/sdks
+          mkdir -p theos/sdks
+          cp -RL /tmp/sdks/iPhoneOS9.3.sdk theos/sdks/
+
+      - name: Fix deprecated module.map filenames in SDK
+        run: |
+          find theos/sdks/iPhoneOS9.3.sdk -name "module.map" | while read f; do
+            mv "$f" "$(dirname "$f")/module.modulemap"
+          done
+
+      - name: Fix SDK TBD stubs for armv7 device linking
+        run: |
+          SDK=theos/sdks/iPhoneOS9.3.sdk
+
+          # The .tbd files in this community SDK have their targets set to
+          # ios-simulator instead of ios, and liblaunch.dylib is listed as a
+          # re-export of libSystem but has no stub of its own. Both cause
+          # linker errors. Fix them in-place.
+
+          # 1. Patch every .tbd file: replace simulator target triples with
+          #    the matching device ones so ld accepts them for armv7-ios.
+          #    Uses -exec instead of | while read to avoid broken pipe errors
+          #    under bash set -e (GitHub Actions default).
+          find "$SDK" -name "*.tbd" -exec sed -i '' 's/i386-ios-simulator/armv7-ios/g' {} \;
+          find "$SDK" -name "*.tbd" -exec sed -i '' 's/x86_64-ios-simulator/arm64-ios/g' {} \;
+          find "$SDK" -name "*.tbd" -exec sed -i '' 's/armv7-apple-ios-simulator/armv7-apple-ios/g' {} \;
+
+          # 2. Remove the liblaunch re-export from libSystem.tbd instead of
+          #    creating a stub. Modern ld on macOS 15 rejects old tapi-tbd-v3
+          #    format stubs, so deleting the reference is cleaner.
+          find "$SDK" -name "libSystem.tbd" -exec sed -i '' '/liblaunch/d' {} \;
+
+      - name: Build .deb
+        env:
+          THEOS: ${{ github.workspace }}/theos
+        run: make package FINALPACKAGE=1
+
+      - name: Upload .deb artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LocalTunes-deb
+          path: packages/*.deb
+
+      - name: Generate Cydia repo
+        run: |
+          mkdir -p public
+          DEB=$(ls packages/*.deb | head -n1)
+          python3 tools/generate_repo.py control "$DEB" public
+          cp Resources/Icon@2x.png public/CydiaIcon.png
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

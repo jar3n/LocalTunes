@@ -1,0 +1,9 @@
+Package: com.yourname.localtunes
+Name: LocalTunes
+Version: 1.0
+Architecture: iphoneos-arm
+Description: A simple local music player. Copy music files into /var/mobile/Media/LocalTunes using Filza and they'll show up here.
+Maintainer: Your Name
+Author: Your Name
+Section: Music
+Depends: firmware (>= 6.0)

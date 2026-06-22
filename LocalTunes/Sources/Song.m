@@ -21,13 +21,14 @@
     NSURL *url = [NSURL fileURLWithPath:self.filePath];
     AVURLAsset *asset = [AVURLAsset URLAssetWithURL:url options:nil];
 
+    // Force a synchronous load of commonMetadata and duration before reading
+    // them. Without this, AVAsset on older iOS returns empty arrays and zero
+    // duration because the asset hasn't finished inspecting the file yet.
     NSError *error = nil;
-    [asset loadValuesAndReturnError:&error]
+    [asset loadValuesAndReturnError:&error];
 
     self.duration = CMTimeGetSeconds(asset.duration);
 
-    // AVAsset reads embedded ID3/iTunes-style tags directly from the file,
-    // so this works without ever importing into the iOS Music library.
     for (AVMetadataItem *item in asset.commonMetadata) {
         if ([item.commonKey isEqualToString:AVMetadataCommonKeyTitle] && item.stringValue.length > 0) {
             self.title = item.stringValue;
