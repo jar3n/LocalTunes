@@ -56,12 +56,11 @@ jobs:
 
           # 1. Patch every .tbd file: replace simulator target triples with
           #    the matching device ones so ld accepts them for armv7-ios.
-          find "$SDK" -name "*.tbd" | while read f; do
-            sed -i '' \
-              's/i386-ios-simulator/armv7-ios/g;
-               s/x86_64-ios-simulator/arm64-ios/g;
-               s/armv7-apple-ios-simulator/armv7-apple-ios/g' "$f"
-          done
+          #    Uses -exec instead of | while read to avoid broken pipe errors
+          #    under bash set -e (GitHub Actions default).
+          find "$SDK" -name "*.tbd" -exec sed -i '' 's/i386-ios-simulator/armv7-ios/g' {} \;
+          find "$SDK" -name "*.tbd" -exec sed -i '' 's/x86_64-ios-simulator/arm64-ios/g' {} \;
+          find "$SDK" -name "*.tbd" -exec sed -i '' 's/armv7-apple-ios-simulator/armv7-apple-ios/g' {} \;
 
           # 2. Create a minimal liblaunch.tbd stub so ld can resolve the
           #    re-export reference inside libSystem.tbd.
