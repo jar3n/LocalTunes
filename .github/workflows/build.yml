@@ -62,20 +62,10 @@ jobs:
           find "$SDK" -name "*.tbd" -exec sed -i '' 's/x86_64-ios-simulator/arm64-ios/g' {} \;
           find "$SDK" -name "*.tbd" -exec sed -i '' 's/armv7-apple-ios-simulator/armv7-apple-ios/g' {} \;
 
-          # 2. Create a minimal liblaunch.tbd stub so ld can resolve the
-          #    re-export reference inside libSystem.tbd.
-          mkdir -p "$SDK/usr/lib/system"
-          printf '%s\n' \
-            '--- !tapi-tbd-v3' \
-            'archs:                 [ armv7, armv7s ]' \
-            'platform:              ios' \
-            'install-name:          /usr/lib/system/liblaunch.dylib' \
-            'current-version:       1.0' \
-            'compatibility-version: 1.0' \
-            'exports:' \
-            '  - archs:             [ armv7, armv7s ]' \
-            '    symbols:           [ ]' \
-            > "$SDK/usr/lib/system/liblaunch.tbd"
+          # 2. Remove the liblaunch re-export from libSystem.tbd instead of
+          #    creating a stub. Modern ld on macOS 15 rejects old tapi-tbd-v3
+          #    format stubs, so deleting the reference is cleaner.
+          find "$SDK" -name "libSystem.tbd" -exec sed -i '' '/liblaunch/d' {} \;
 
       - name: Build .deb
         env:
