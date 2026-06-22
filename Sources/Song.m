@@ -21,28 +21,36 @@
     NSURL *url = [NSURL fileURLWithPath:self.filePath];
     AVURLAsset *asset = [AVURLAsset URLAssetWithURL:url options:nil];
 
+    NSArray *keys = @[ @"commonMetadata" ];
+
     NSError *error = nil;
-    
-    NSArray *keys = @[ @"duration", @"tracks" ]; // add the keys you actually use
-
     [asset loadValuesAsynchronouslyForKeys:keys completionHandler:^{
-        for (NSString *key in keys) {
-            NSError *keyError = nil;
-            AVKeyValueStatus status = [asset statusOfValueForKey:key error:&keyError];
+        AVKeyValueStatus status = [asset statusOfValueForKey:@"commonMetadata" error:&error];
+        if (status != AVKeyValueStatusLoaded) { return; }
 
-            if (status == AVKeyValueStatusLoaded) {
-                continue;
-            } else {
-                // handle error (keyError) on the place you need results
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    // your failure handling
-                });
-                return;
-            }
+        NSArray *items = asset.commonMetadata;
+
+        NSString *author = nil;
+        NSString *title = nil;
+
+        for (AVMetadataItem *item in items) {
+            if (![item commonKey]) continue;
+
+            NSString *value = nil;
+            // common keys often come with item.value as an object you can stringify
+            if ([item.value isKindOfClass:[NSString class]]) value = (NSString *)item.value;
+            else if ([item.value respondsToSelector:@selector(stringValue)]) value = [item.value stringValue];
+
+            if (!value) continue;
+
+            if ([item.commonKey isEqualToString:@"artist"]) author = value;
+            if ([item.commonKey isEqualToString:@"title"])  title  = value;
         }
 
         dispatch_async(dispatch_get_main_queue(), ^{
-            // now it’s safe to read asset.duration / asset.tracks, etc.
+            // use author and title here
+            // self.author = author;
+            // self.songTitle = title;
         });
     }];
 
