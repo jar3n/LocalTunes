@@ -22,7 +22,29 @@
     AVURLAsset *asset = [AVURLAsset URLAssetWithURL:url options:nil];
 
     NSError *error = nil;
-    [asset loadValuesAndReturnError:&error]
+    
+    NSArray *keys = @[ @"duration", @"tracks" ]; // add the keys you actually use
+
+    [asset loadValuesAsynchronouslyForKeys:keys completionHandler:^{
+        for (NSString *key in keys) {
+            NSError *keyError = nil;
+            AVKeyValueStatus status = [asset statusOfValueForKey:key error:&keyError];
+
+            if (status == AVKeyValueStatusLoaded) {
+                continue;
+            } else {
+                // handle error (keyError) on the place you need results
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    // your failure handling
+                });
+                return;
+            }
+        }
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            // now it’s safe to read asset.duration / asset.tracks, etc.
+        });
+    }];
 
     self.duration = CMTimeGetSeconds(asset.duration);
 
