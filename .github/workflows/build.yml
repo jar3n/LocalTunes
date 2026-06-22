@@ -39,6 +39,12 @@ jobs:
           mkdir -p theos/sdks
           cp -R /tmp/sdks/iPhoneOS9.3.sdk theos/sdks/
 
+      - name: Fix deprecated module.map filenames in SDK
+        run: |
+          find theos/sdks/iPhoneOS9.3.sdk -name "module.map" | while read f; do
+            mv "$f" "$(dirname "$f")/module.modulemap"
+          done
+
       - name: Build .deb
         env:
           THEOS: ${{ github.workspace }}/theos
