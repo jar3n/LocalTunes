@@ -49,6 +49,15 @@ clean_theos() {
 }
 clean_theos || true
 
+# Stamp branch name into control file so .deb name includes it.
+# The control file is restored from git afterward.
+BRANCH="$(git -C "$PROJECT_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"
+if [ "$BRANCH" != "main" ]; then
+    echo "==> Build from branch '$BRANCH' — marking deb as test build"
+    sed -i 's/^Name: .*/& ('"$BRANCH"')/' "$PROJECT_DIR/control"
+    sed -i 's/^Version: .*/&-'"$BRANCH"'/' "$PROJECT_DIR/control"
+fi
+
 echo "==> Building LocalTunes..."
 mkdir -p "$PROJECT_DIR/packages"
 "$RUNTIME" run --rm \
@@ -87,6 +96,11 @@ done
 cd /project
 exec make package FINALPACKAGE=1
 '
+
+# Restore control file if we stamped it
+if [ "$BRANCH" != "main" ]; then
+    git -C "$PROJECT_DIR" checkout -- control
+fi
 
 echo ""
 echo "==> Done! .deb is in: $PROJECT_DIR/packages/"
