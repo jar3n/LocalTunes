@@ -25,7 +25,7 @@
      inkscape:document-units="mm"
      showborder="true"
      inkscape:zoom="0.75098906"
-     inkscape:cx="397.47583"
+     inkscape:cx="396.81004"
      inkscape:cy="561.25984"
      inkscape:window-width="1920"
      inkscape:window-height="1052"
@@ -48,9 +48,9 @@
        y="47.562279"
        rx="6"
        ry="6"
-       inkscape:export-filename="app_icon.png"
-       inkscape:export-xdpi="96"
-       inkscape:export-ydpi="96" />
+       inkscape:export-filename="app_icon_normal.png"
+       inkscape:export-xdpi="25.683874"
+       inkscape:export-ydpi="25.683874" />
     <g
        id="g6"
        transform="matrix(0.80540163,0,0,1.0138875,24.364754,-134.42975)">
