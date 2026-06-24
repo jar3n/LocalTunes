@@ -2,7 +2,7 @@ name: Build LocalTunes
 
 on:
   push:
-    branches: [main]
+    branches: ["**"]
   workflow_dispatch:
 
 # Lets the deploy job publish to GitHub Pages.
@@ -12,8 +12,8 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  group: "${{ github.ref_name }}"
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -45,6 +45,12 @@ jobs:
             mv "$f" "$(dirname "$f")/module.modulemap"
           done
 
+      - name: Mark as test build on non-main branches
+        if: github.ref_name != 'main'
+        run: |
+          sed -i '' 's/^Name: .*/& (Test)/' control
+          sed -i '' 's/^Version: .*/&-test/' control
+
       - name: Build .deb
         env:
           THEOS: ${{ github.workspace }}/theos
@@ -69,6 +75,7 @@ jobs:
           path: public
 
   deploy:
+    if: github.ref_name == 'main'
     needs: build
     runs-on: ubuntu-latest
     environment:
