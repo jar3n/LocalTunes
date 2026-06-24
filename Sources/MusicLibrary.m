@@ -51,7 +51,7 @@
     NSFileManager *fm = [NSFileManager defaultManager];
     NSArray *contents = [fm contentsOfDirectoryAtPath:self.musicDirectory error:nil];
 
-    NSSet *supportedExtensions = [NSSet setWithObjects:@"mp3", @"m4a", @"wav", @"aac", @"aiff", @"caf", nil];
+    NSSet *supportedExtensions = [NSSet setWithObjects:@"mp3", @"m4a", @"wav", @"aac", @"aiff", @"caf", @"ogg", nil];
 
     NSMutableArray *result = [NSMutableArray array];
     for (NSString *file in contents) {

@@ -113,7 +113,7 @@
     NSString *path = [MusicLibrary sharedLibrary].musicDirectory;
     UIAlertView *alert = [[UIAlertView alloc]
         initWithTitle:@"Music Folder"
-              message:[NSString stringWithFormat:@"Use Filza to copy mp3/m4a files into:\n\n%@\n\nThen tap the refresh button.", path]
+              message:[NSString stringWithFormat:@"Use Filza to copy mp3/m4a/ogg files into:\n\n%@\n\nThen tap the refresh button.", path]
              delegate:nil
     cancelButtonTitle:@"OK"
     otherButtonTitles:nil];
