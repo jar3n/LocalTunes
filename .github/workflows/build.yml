@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
@@ -26,13 +26,11 @@ jobs:
       - name: Mark as test build on non-main branches
         if: github.ref_name != 'main'
         run: |
-          sed -i '' 's/^Name: .*/& (Test)/' control
-          sed -i '' 's/^Version: .*/&-test/' control
+          sed -i 's/^Name: .*/& (Test)/' control
+          sed -i 's/^Version: .*/&-test/' control
 
-      # use the docker container instead of
-      # dealing with the mac github runner
-      - name: Make Build Container
-        run: build-in-container.sh
+      - name: Build inside container
+        run: ./build-in-container.sh
 
       - name: Upload .deb artifact
         uses: actions/upload-artifact@v4
