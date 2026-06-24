@@ -3,6 +3,7 @@
 #import "Song.h"
 
 @interface NowPlayingViewController ()
+@property (nonatomic, strong) UIImageView *artworkImageView;
 @property (nonatomic, strong) UILabel *titleLabel;
 @property (nonatomic, strong) UILabel *artistLabel;
 @property (nonatomic, strong) UILabel *albumLabel;
@@ -28,17 +29,27 @@
     self.title = @"Now Playing";
 
     CGFloat w = self.view.bounds.size.width;
-    CGFloat top = 30; // top margin from the visible area (below nav bar)
+
+    // --- Album artwork ---
+    CGFloat artworkSize = 180;
+    self.artworkImageView = [[UIImageView alloc] initWithFrame:CGRectMake((w - artworkSize) / 2, 10, artworkSize, artworkSize)];
+    self.artworkImageView.contentMode = UIViewContentModeScaleAspectFill;
+    self.artworkImageView.clipsToBounds = YES;
+    self.artworkImageView.layer.borderColor = [UIColor colorWithWhite:0.85 alpha:1.0].CGColor;
+    self.artworkImageView.layer.borderWidth = 1;
+    self.artworkImageView.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
+    [self.view addSubview:self.artworkImageView];
 
     // --- Title ---
-    self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, top, w - 40, 30)];
+    CGFloat titleY = 200;
+    self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, titleY, w - 40, 30)];
     self.titleLabel.font = [UIFont boldSystemFontOfSize:22];
     self.titleLabel.textAlignment = NSTextAlignmentCenter;
     self.titleLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     [self.view addSubview:self.titleLabel];
 
     // --- Artist ---
-    self.artistLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, top + 36, w - 40, 22)];
+    self.artistLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, titleY + 36, w - 40, 22)];
     self.artistLabel.font = [UIFont systemFontOfSize:17];
     self.artistLabel.textColor = [UIColor grayColor];
     self.artistLabel.textAlignment = NSTextAlignmentCenter;
@@ -46,7 +57,7 @@
     [self.view addSubview:self.artistLabel];
 
     // --- Album ---
-    self.albumLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, top + 60, w - 40, 18)];
+    self.albumLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, titleY + 60, w - 40, 18)];
     self.albumLabel.font = [UIFont systemFontOfSize:13];
     self.albumLabel.textColor = [UIColor lightGrayColor];
     self.albumLabel.textAlignment = NSTextAlignmentCenter;
@@ -54,7 +65,7 @@
     [self.view addSubview:self.albumLabel];
 
     // --- Progress slider ---
-    CGFloat sliderY = top + 110;
+    CGFloat sliderY = titleY + 110;
     self.progressSlider = [[UISlider alloc] initWithFrame:CGRectMake(20, sliderY, w - 40, 30)];
     self.progressSlider.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     [self.progressSlider addTarget:self action:@selector(sliderTouchDown) forControlEvents:UIControlEventTouchDown];
@@ -77,33 +88,34 @@
     [self.view addSubview:self.durationLabel];
 
     // --- Playback controls ---
-    CGFloat buttonsY = timeY + 50;
-    CGFloat buttonW = 64;
-    CGFloat buttonH = 44;
-    CGFloat gap = 20;
+    CGFloat buttonsY = timeY + 60;
+    CGFloat buttonW = 72;
+    CGFloat buttonH = 52;
+    CGFloat gap = 24;
     CGFloat totalW = buttonW * 3 + gap * 2;
     CGFloat startX = (w - totalW) / 2;
 
     // Previous
-    UIButton *prevButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    UIButton *prevButton = [UIButton buttonWithType:UIButtonTypeCustom];
     prevButton.frame = CGRectMake(startX, buttonsY, buttonW, buttonH);
-    [prevButton setTitle:@"◀◀" forState:UIControlStateNormal];
-    prevButton.titleLabel.font = [UIFont systemFontOfSize:20];
+    prevButton.imageView.contentMode = UIViewContentModeScaleAspectFit;
+    [prevButton setImage:[UIImage imageNamed:@"rewind2"] forState:UIControlStateNormal];
     [prevButton addTarget:self action:@selector(previous) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:prevButton];
 
     // Play / Pause
-    self.playPauseButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    self.playPauseButton = [UIButton buttonWithType:UIButtonTypeCustom];
     self.playPauseButton.frame = CGRectMake(startX + buttonW + gap, buttonsY, buttonW, buttonH);
-    self.playPauseButton.titleLabel.font = [UIFont systemFontOfSize:26];
+    self.playPauseButton.imageView.contentMode = UIViewContentModeScaleAspectFit;
+    [self.playPauseButton setImage:[UIImage imageNamed:@"play2"] forState:UIControlStateNormal];
     [self.playPauseButton addTarget:self action:@selector(togglePlayPause) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:self.playPauseButton];
 
     // Next
-    UIButton *nextButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    UIButton *nextButton = [UIButton buttonWithType:UIButtonTypeCustom];
     nextButton.frame = CGRectMake(startX + (buttonW + gap) * 2, buttonsY, buttonW, buttonH);
-    [nextButton setTitle:@"▶▶" forState:UIControlStateNormal];
-    nextButton.titleLabel.font = [UIFont systemFontOfSize:20];
+    nextButton.imageView.contentMode = UIViewContentModeScaleAspectFit;
+    [nextButton setImage:[UIImage imageNamed:@"forward2"] forState:UIControlStateNormal];
     [nextButton addTarget:self action:@selector(next) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:nextButton];
 
@@ -134,6 +146,13 @@
     self.artistLabel.text = song.artist;
     self.albumLabel.text = song.album;
 
+    // Album artwork — use embedded art or a placeholder
+    if (song.artwork) {
+        self.artworkImageView.image = song.artwork;
+    } else {
+        self.artworkImageView.image = [UIImage imageNamed:@"unknown_art"];
+    }
+
     NSTimeInterval duration = [player duration];
     NSTimeInterval current = [player currentTime];
 
@@ -144,7 +163,8 @@
     self.currentTimeLabel.text = [self formatTime:current];
     self.durationLabel.text = [self formatTime:duration];
 
-    [self.playPauseButton setTitle:player.isPlaying ? @"■" : @"▶" forState:UIControlStateNormal];
+    UIImage *icon = player.isPlaying ? [UIImage imageNamed:@"pause2"] : [UIImage imageNamed:@"play2"];
+    [self.playPauseButton setImage:icon forState:UIControlStateNormal];
 }
 
 - (NSString *)formatTime:(NSTimeInterval)time {

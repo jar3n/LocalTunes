@@ -137,7 +137,7 @@
     [self.miniPlayerView addSubview:topBorder];
 
     // Song label (tap to open Now Playing)
-    self.miniPlayerLabel = [[UILabel alloc] initWithFrame:CGRectMake(12, 0, frame.size.width - 100, height)];
+    self.miniPlayerLabel = [[UILabel alloc] initWithFrame:CGRectMake(12, 0, frame.size.width - 110, height)];
     self.miniPlayerLabel.font = [UIFont systemFontOfSize:14];
     self.miniPlayerLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     self.miniPlayerLabel.userInteractionEnabled = YES;
@@ -146,10 +146,10 @@
     [self.miniPlayerView addSubview:self.miniPlayerLabel];
 
     // Play / Pause button
-    self.miniPlayerPlayPauseButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    self.miniPlayerPlayPauseButton.frame = CGRectMake(frame.size.width - 80, 5, 65, 40);
+    self.miniPlayerPlayPauseButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    self.miniPlayerPlayPauseButton.frame = CGRectMake(frame.size.width - 100, 3, 85, 44);
     self.miniPlayerPlayPauseButton.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
-    self.miniPlayerPlayPauseButton.titleLabel.font = [UIFont systemFontOfSize:20];
+    self.miniPlayerPlayPauseButton.imageView.contentMode = UIViewContentModeScaleAspectFit;
     [self.miniPlayerPlayPauseButton addTarget:self action:@selector(togglePlayPause) forControlEvents:UIControlEventTouchUpInside];
     [self.miniPlayerView addSubview:self.miniPlayerPlayPauseButton];
 
@@ -164,8 +164,8 @@
     } else {
         self.miniPlayerLabel.text = @"No song playing";
     }
-    NSString *title = [PlayerController sharedPlayer].isPlaying ? @"■" : @"▶";
-    [self.miniPlayerPlayPauseButton setTitle:title forState:UIControlStateNormal];
+    UIImage *icon = [PlayerController sharedPlayer].isPlaying ? [UIImage imageNamed:@"pause2"] : [UIImage imageNamed:@"play2"];
+    [self.miniPlayerPlayPauseButton setImage:icon forState:UIControlStateNormal];
 }
 
 - (void)togglePlayPause {
