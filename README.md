@@ -30,7 +30,7 @@ extend easily (see `Sources/`).
 
 ```
 LocalTunes/
-├── Makefile                 # Theos build config (armv7, iOS 6.0–9.3)
+├── Makefile                 # Theos build config (armv7 + arm64, iOS 6.0+)
 ├── control                  # Cydia package metadata
 ├── Sources/                 # Objective-C source
 └── Resources/
@@ -47,9 +47,9 @@ runner, then attaches it as a downloadable artifact named `LocalTunes-deb`.
 Why a macOS runner and not Linux, if Theos can cross-compile on Linux too?
 Apple's modern Xcode/SDKs dropped armv7 support entirely, so either way you
 need an old SDK. The workflow pulls a community-maintained
-[`iPhoneOS9.3.sdk`](https://github.com/theos/sdks) into Theos's `sdks/`
-folder before building, which is what makes targeting this old armv7 device
-possible at all today.
+[`iPhoneOS10.3.sdk`](https://github.com/theos/sdks) into Theos's `sdks/`
+folder before building, which supports both armv7 and arm64 (needed for
+iPod Touch 6th gen and newer devices).
 
 ### Building locally instead (optional)
 
@@ -59,7 +59,7 @@ If you'd rather build on your own Mac or Linux machine:
 git clone --recursive https://github.com/theos/theos.git ~/theos
 export THEOS=~/theos
 git clone --depth 1 https://github.com/theos/sdks.git /tmp/sdks
-cp -R /tmp/sdks/iPhoneOS9.3.sdk $THEOS/sdks/
+cp -R /tmp/sdks/iPhoneOS10.3.sdk $THEOS/sdks/
 
 git clone <this repo>
 cd LocalTunes
