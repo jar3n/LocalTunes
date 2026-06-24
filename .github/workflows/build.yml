@@ -7,7 +7,7 @@ on:
 
 # Lets the deploy job publish to GitHub Pages.
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -61,3 +61,15 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Checkout again (needed for version bump commit)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Bump version for next release
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          ./bump-version.sh --commit
+          git push origin HEAD:main
