@@ -1,6 +1,6 @@
 Package: com.jar3n.localtunes
 Name: LocalTunes
-Version: 1.1
+Version: 1.2
 Architecture: iphoneos-arm
 Description: A simple local music player. Copy music files into /var/mobile/Media/LocalTunes using Filza and they'll show up here.
 Maintainer: James Englander
