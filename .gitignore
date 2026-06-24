@@ -1,5 +1,24 @@
+# Theos build artifacts
 .theos/
 obj/
+build_session
+*.stamp
+*.o
+
+# Packaged .debs
 packages/
 *.deb
+
+# Editor / OS junk
 .DS_Store
+*~
+*.swp
+*.swo
+*.swn
+*.pyc
+__pycache__/
+
+# IDE config (user-local)
+.idea/
+.vscode/
+*.sublime-*

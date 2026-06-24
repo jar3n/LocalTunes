@@ -1,11 +1,14 @@
 #import "PlayerController.h"
+#import "OGGPlayer.h"
 #import <AVFoundation/AVFoundation.h>
 #import <MediaPlayer/MediaPlayer.h>
 
-@interface PlayerController () <AVAudioPlayerDelegate>
+@interface PlayerController () <AVAudioPlayerDelegate, OGGPlayerDelegate>
 @property (nonatomic, strong) AVAudioPlayer *audioPlayer;
+@property (nonatomic, strong) OGGPlayer *oggPlayer;
 @property (nonatomic, strong) NSArray<Song *> *queue;
 @property (nonatomic, assign) NSInteger currentIndex;
+@property (nonatomic, assign) BOOL isOGG;
 @end
 
 @implementation PlayerController
@@ -67,12 +70,23 @@
     Song *song = [self currentSong];
     if (!song) return;
 
-    NSError *error = nil;
-    NSURL *url = [NSURL fileURLWithPath:song.filePath];
-    self.audioPlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:url error:&error];
-    self.audioPlayer.delegate = self;
-    [self.audioPlayer prepareToPlay];
-    [self.audioPlayer play];
+    // Check if this is an OGG file
+    NSString *ext = [[song.filePath pathExtension] lowercaseString];
+    self.isOGG = [ext isEqualToString:@"ogg"];
+
+    if (self.isOGG) {
+        NSError *error = nil;
+        self.oggPlayer = [[OGGPlayer alloc] initWithContentsOfFile:song.filePath error:&error];
+        self.oggPlayer.delegate = self;
+        [self.oggPlayer play];
+    } else {
+        NSError *error = nil;
+        NSURL *url = [NSURL fileURLWithPath:song.filePath];
+        self.audioPlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:url error:&error];
+        self.audioPlayer.delegate = self;
+        [self.audioPlayer prepareToPlay];
+        [self.audioPlayer play];
+    }
 
     [self updateNowPlayingInfo];
     [self notifyStateChanged];
@@ -84,16 +98,27 @@
 }
 
 - (BOOL)isPlaying {
+    if (self.isOGG) {
+        return self.oggPlayer.isPlaying;
+    }
     return self.audioPlayer.isPlaying;
 }
 
 - (void)togglePlayPause {
-    if (!self.audioPlayer) return;
-
-    if (self.audioPlayer.isPlaying) {
-        [self.audioPlayer pause];
+    if (self.isOGG) {
+        if (!self.oggPlayer) return;
+        if (self.oggPlayer.isPlaying) {
+            [self.oggPlayer pause];
+        } else {
+            [self.oggPlayer play];
+        }
     } else {
-        [self.audioPlayer play];
+        if (!self.audioPlayer) return;
+        if (self.audioPlayer.isPlaying) {
+            [self.audioPlayer pause];
+        } else {
+            [self.audioPlayer play];
+        }
     }
 
     [self updateNowPlayingInfo];
@@ -113,15 +138,25 @@
 }
 
 - (void)seekToTime:(NSTimeInterval)time {
-    self.audioPlayer.currentTime = time;
+    if (self.isOGG) {
+        [self.oggPlayer seekToTime:time];
+    } else {
+        self.audioPlayer.currentTime = time;
+    }
     [self updateNowPlayingInfo];
 }
 
 - (NSTimeInterval)currentTime {
+    if (self.isOGG) {
+        return self.oggPlayer.currentTime;
+    }
     return self.audioPlayer.currentTime;
 }
 
 - (NSTimeInterval)duration {
+    if (self.isOGG) {
+        return self.oggPlayer.duration;
+    }
     return self.audioPlayer.duration;
 }
 
@@ -132,13 +167,17 @@
     Class infoCenterClass = NSClassFromString(@"MPNowPlayingInfoCenter");
     if (!infoCenterClass) return;
 
+    NSTimeInterval dur = [self duration];
+    NSTimeInterval cur = [self currentTime];
+    BOOL playing = [self isPlaying];
+
     NSMutableDictionary *info = [NSMutableDictionary dictionary];
     info[MPMediaItemPropertyTitle] = song.title;
     info[MPMediaItemPropertyArtist] = song.artist;
     info[MPMediaItemPropertyAlbumTitle] = song.album;
-    info[MPMediaItemPropertyPlaybackDuration] = @(self.audioPlayer.duration);
-    info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = @(self.audioPlayer.currentTime);
-    info[MPNowPlayingInfoPropertyPlaybackRate] = @(self.audioPlayer.isPlaying ? 1.0 : 0.0);
+    info[MPMediaItemPropertyPlaybackDuration] = @(dur);
+    info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = @(cur);
+    info[MPNowPlayingInfoPropertyPlaybackRate] = @(playing ? 1.0 : 0.0);
 
     [MPNowPlayingInfoCenter defaultCenter].nowPlayingInfo = info;
 }
@@ -152,6 +191,16 @@
 #pragma mark - AVAudioPlayerDelegate
 
 - (void)audioPlayerDidFinishPlaying:(AVAudioPlayer *)player successfully:(BOOL)flag {
+    [self songFinished];
+}
+
+#pragma mark - OGGPlayerDelegate
+
+- (void)oggPlayerDidFinishPlaying:(OGGPlayer *)player {
+    [self songFinished];
+}
+
+- (void)songFinished {
     if ([self.delegate respondsToSelector:@selector(playerDidFinishSong)]) {
         [self.delegate playerDidFinishSong];
     }
