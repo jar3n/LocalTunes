@@ -10,6 +10,17 @@
     [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:&error];
     [[AVAudioSession sharedInstance] setActive:YES error:&error];
 
+    // iOS 7+ appearance
+    if ([UINavigationBar instancesRespondToSelector:@selector(setBarTintColor:)]) {
+        [[UINavigationBar appearance] setBarTintColor:[UIColor colorWithRed:0.35 green:0.96 blue:0.31 alpha:1.0]];
+        [[UINavigationBar appearance] setTintColor:[UIColor blackColor]];
+        [[UINavigationBar appearance] setTitleTextAttributes:@{
+            NSForegroundColorAttributeName: [UIColor blackColor]
+        }];
+        [[UINavigationBar appearance] setTranslucent:NO];
+        [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleDefault];
+    }
+
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
 
     RootViewController *root = [[RootViewController alloc] init];

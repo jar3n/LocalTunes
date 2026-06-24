@@ -1,5 +1,6 @@
 #import "Song.h"
 #import <AVFoundation/AVFoundation.h>
+#import <UIKit/UIImage.h>
 
 @implementation Song
 
@@ -32,6 +33,17 @@
             self.artist = item.stringValue;
         } else if ([item.commonKey isEqualToString:AVMetadataCommonKeyAlbumName] && item.stringValue.length > 0) {
             self.album = item.stringValue;
+        } else if ([item.commonKey isEqualToString:AVMetadataCommonKeyArtwork]) {
+            // Artwork can be NSData (ID3) or a dictionary (iTunes-style)
+            if ([item.value isKindOfClass:[NSData class]]) {
+                self.artwork = [UIImage imageWithData:(NSData *)item.value];
+            } else if ([item.value isKindOfClass:[NSDictionary class]]) {
+                NSDictionary *dict = (NSDictionary *)item.value;
+                NSData *data = dict[@"data"];
+                if (data) {
+                    self.artwork = [UIImage imageWithData:data];
+                }
+            }
         }
     }
 }

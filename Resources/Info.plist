@@ -22,8 +22,8 @@
 	<string>1</string>
 	<key>CFBundleIconFiles</key>
 	<array>
-		<string>Icon.png</string>
-		<string>Icon@2x.png</string>
+		<string>app_icon_small.png</string>
+		<string>app_icon_normal.png</string>
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>

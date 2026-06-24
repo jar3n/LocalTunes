@@ -8,11 +8,12 @@ Generates a minimal Cydia/APT repo around a single .deb:
 
 Usage: generate_repo.py <control file> <deb file> <output dir>
 """
-import sys
-import os
-import hashlib
+
 import bz2
+import hashlib
+import os
 import shutil
+import sys
 
 
 def parse_control(path):
@@ -63,8 +64,17 @@ def main():
     sha256 = hash_file(deb_path, "sha256")
 
     # Field order Cydia/APT expect; only emit ones that are actually present.
-    field_order = ["Package", "Name", "Version", "Architecture", "Maintainer",
-                   "Author", "Section", "Description", "Depends"]
+    field_order = [
+        "Package",
+        "Name",
+        "Version",
+        "Architecture",
+        "Maintainer",
+        "Author",
+        "Section",
+        "Description",
+        "Depends",
+    ]
 
     lines = [f"{key}: {fields[key]}" for key in field_order if key in fields]
     lines.append(f"Filename: debs/{deb_name}")
@@ -82,7 +92,7 @@ def main():
     with open(os.path.join(out_dir, "Packages.bz2"), "wb") as f:
         f.write(bz2.compress(packages_text.encode("utf-8")))
 
-    version = fields.get("Version", "1.0")
+    version = fields.get("Version", "1.1")
     release_text = (
         "Origin: LocalTunes Repo\n"
         "Label: LocalTunes\n"
