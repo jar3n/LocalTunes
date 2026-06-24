@@ -43,7 +43,7 @@ jobs:
           mkdir -p public
           DEB=$(ls packages/*.deb | head -n1)
           python3 tools/generate_repo.py control "$DEB" public
-          cp Resources/Icon@2x.png public/CydiaIcon.png
+          cp Resources/app_icon_normal.png public/CydiaIcon.png
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
