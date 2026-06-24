@@ -26,8 +26,8 @@ jobs:
       - name: Mark as test build on non-main branches
         if: github.ref_name != 'main'
         run: |
-          sed -i 's/^Name: .*/& (Test)/' control
-          sed -i 's/^Version: .*/&-test/' control
+          sed -i 's/^Name: .*/& (${{ github.ref_name }})/' control
+          sed -i 's/^Version: .*/&-${{ github.ref_name }}/' control
 
       - name: Build inside container
         run: ./build-in-container.sh
