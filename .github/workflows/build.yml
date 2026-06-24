@@ -2,7 +2,7 @@ name: Build LocalTunes
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 # Lets the deploy job publish to GitHub Pages.
@@ -45,7 +45,7 @@ jobs:
             mv "$f" "$(dirname "$f")/module.modulemap"
           done
 
-      - name: Fix SDK TBD stubs for armv7 device linking
+      - name: Fix SDK TBD stubs for device linking (armv7 + arm64)
         run: |
           SDK=theos/sdks/iPhoneOS9.3.sdk
 
@@ -55,14 +55,19 @@ jobs:
           # linker errors. Fix them in-place.
 
           # 1. Patch every .tbd file: replace simulator target triples with
-          #    the matching device ones so ld accepts them for armv7-ios.
+          #    the matching device ones so ld accepts them for device iOS.
           #    Uses -exec instead of | while read to avoid broken pipe errors
           #    under bash set -e (GitHub Actions default).
           find "$SDK" -name "*.tbd" -exec sed -i '' 's/i386-ios-simulator/armv7-ios/g' {} \;
           find "$SDK" -name "*.tbd" -exec sed -i '' 's/x86_64-ios-simulator/arm64-ios/g' {} \;
           find "$SDK" -name "*.tbd" -exec sed -i '' 's/armv7-apple-ios-simulator/armv7-apple-ios/g' {} \;
 
-          # 2. Remove the liblaunch re-export from libSystem.tbd instead of
+          # 2. Fix the top-level platform field.  Some .tbd files have
+          #    platform: ios-simulator even after the target-triple fix above;
+          #    modern ld rejects these when building for device iOS.
+          find "$SDK" -name "*.tbd" -exec sed -i '' 's/platform: ios-simulator/platform: ios/g' {} \;
+
+          # 3. Remove the liblaunch re-export from libSystem.tbd instead of
           #    creating a stub. Modern ld on macOS 15 rejects old tapi-tbd-v3
           #    format stubs, so deleting the reference is cleaner.
           find "$SDK" -name "libSystem.tbd" -exec sed -i '' '/liblaunch/d' {} \;
