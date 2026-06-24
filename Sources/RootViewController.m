@@ -19,6 +19,10 @@
     self.title = @"Local Music";
     self.tableView.rowHeight = 56;
 
+    // Dark theme
+    self.tableView.backgroundColor = [UIColor blackColor];
+    self.tableView.separatorColor = [UIColor colorWithRed:0.35 green:0.96 blue:0.31 alpha:0.3];
+
     self.navigationItem.rightBarButtonItem =
         [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh
                                                         target:self
@@ -35,12 +39,23 @@
     self.searchBar = [[UISearchBar alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, 44)];
     self.searchBar.delegate = self;
     self.searchBar.placeholder = @"Search songs or artists";
+    self.searchBar.barStyle = UIBarStyleBlack;
+    self.searchBar.searchBarStyle = UISearchBarStyleMinimal;
+    self.searchBar.tintColor = [UIColor colorWithRed:0.35 green:0.96 blue:0.31 alpha:1.0];
     self.tableView.tableHeaderView = self.searchBar;
 
     // iOS 7+ search bar appearance
     if ([self.searchBar respondsToSelector:@selector(setBarTintColor:)]) {
         self.searchBar.tintColor = self.navigationController.navigationBar.tintColor;
     }
+
+    // Search text field appearance
+    UITextField *searchTextField = [self.searchBar valueForKey:@"searchField"];
+    searchTextField.textColor = [UIColor colorWithRed:0.35 green:0.96 blue:0.31 alpha:1.0];
+    searchTextField.backgroundColor = [UIColor colorWithWhite:0.12 alpha:1.0];
+    searchTextField.attributedPlaceholder = [[NSAttributedString alloc]
+        initWithString:@"Search songs or artists"
+            attributes:@{NSForegroundColorAttributeName: [UIColor colorWithRed:0.35 green:0.96 blue:0.31 alpha:0.5]}];
 
     self.allSongs = [MusicLibrary sharedLibrary].songs;
     self.filteredSongs = self.allSongs;
@@ -126,19 +141,22 @@
     CGFloat height = 50;
     CGRect frame = self.view.bounds;
 
+    UIColor *greenColor = [UIColor colorWithRed:0.35 green:0.96 blue:0.31 alpha:1.0];
+
     self.miniPlayerView = [[UIView alloc] initWithFrame:CGRectMake(0, frame.size.height - height, frame.size.width, height)];
-    self.miniPlayerView.backgroundColor = [UIColor colorWithWhite:0.93 alpha:1.0];
+    self.miniPlayerView.backgroundColor = [UIColor colorWithWhite:0.08 alpha:1.0];
     self.miniPlayerView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleTopMargin;
 
     // Top border
     UIView *topBorder = [[UIView alloc] initWithFrame:CGRectMake(0, 0, frame.size.width, 0.5)];
-    topBorder.backgroundColor = [UIColor colorWithWhite:0.75 alpha:1.0];
+    topBorder.backgroundColor = greenColor;
     topBorder.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     [self.miniPlayerView addSubview:topBorder];
 
     // Song label (tap to open Now Playing)
     self.miniPlayerLabel = [[UILabel alloc] initWithFrame:CGRectMake(12, 0, frame.size.width - 110, height)];
     self.miniPlayerLabel.font = [UIFont systemFontOfSize:14];
+    self.miniPlayerLabel.textColor = greenColor;
     self.miniPlayerLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     self.miniPlayerLabel.userInteractionEnabled = YES;
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(openNowPlaying)];
@@ -150,6 +168,8 @@
     self.miniPlayerPlayPauseButton.frame = CGRectMake(frame.size.width - 100, 3, 85, 44);
     self.miniPlayerPlayPauseButton.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
     self.miniPlayerPlayPauseButton.imageView.contentMode = UIViewContentModeScaleAspectFit;
+    [self.miniPlayerPlayPauseButton setImage:[[self.miniPlayerPlayPauseButton imageForState:UIControlStateNormal] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
+    self.miniPlayerPlayPauseButton.tintColor = greenColor;
     [self.miniPlayerPlayPauseButton addTarget:self action:@selector(togglePlayPause) forControlEvents:UIControlEventTouchUpInside];
     [self.miniPlayerView addSubview:self.miniPlayerPlayPauseButton];
 
@@ -206,6 +226,19 @@
     Song *song = self.filteredSongs[indexPath.row];
     cell.textLabel.text = song.title;
     cell.detailTextLabel.text = song.artist;
+
+    // Dark theme
+    UIColor *greenColor = [UIColor colorWithRed:0.35 green:0.96 blue:0.31 alpha:1.0];
+    cell.backgroundColor = [UIColor blackColor];
+    cell.textLabel.textColor = greenColor;
+    cell.detailTextLabel.textColor = [UIColor colorWithRed:0.35 green:0.96 blue:0.31 alpha:0.7];
+    cell.tintColor = greenColor;
+
+    // Selected background
+    UIView *selBg = [[UIView alloc] init];
+    selBg.backgroundColor = [UIColor colorWithRed:0.35 green:0.96 blue:0.31 alpha:0.15];
+    cell.selectedBackgroundView = selBg;
+
     return cell;
 }
 
