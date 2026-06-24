@@ -23,38 +23,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install build dependencies
-        run: brew install ldid xz make
-
-      - name: Checkout Theos
-        uses: actions/checkout@v4
-        with:
-          repository: theos/theos
-          submodules: recursive
-          path: theos
-
-      - name: Install iOS SDK (for armv7 + arm64)
-        run: |
-          git clone --depth 1 https://github.com/theos/sdks.git /tmp/sdks
-          mkdir -p theos/sdks
-          cp -RL /tmp/sdks/iPhoneOS10.3.sdk theos/sdks/
-
-      - name: Fix deprecated module.map filenames in SDK
-        run: |
-          find theos/sdks -name "module.map" | while read f; do
-            mv "$f" "$(dirname "$f")/module.modulemap"
-          done
-
       - name: Mark as test build on non-main branches
         if: github.ref_name != 'main'
         run: |
           sed -i '' 's/^Name: .*/& (Test)/' control
           sed -i '' 's/^Version: .*/&-test/' control
 
-      - name: Build .deb
-        env:
-          THEOS: ${{ github.workspace }}/theos
-        run: make package FINALPACKAGE=1
+      # use the docker container instead of
+      # dealing with the mac github runner
+      - name: Make Build Container
+        run: build-in-container.sh
 
       - name: Upload .deb artifact
         uses: actions/upload-artifact@v4
