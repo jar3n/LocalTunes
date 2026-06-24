@@ -5,6 +5,7 @@
 @interface NowPlayingViewController ()
 @property (nonatomic, strong) UILabel *titleLabel;
 @property (nonatomic, strong) UILabel *artistLabel;
+@property (nonatomic, strong) UILabel *albumLabel;
 @property (nonatomic, strong) UISlider *progressSlider;
 @property (nonatomic, strong) UILabel *currentTimeLabel;
 @property (nonatomic, strong) UILabel *durationLabel;
@@ -17,55 +18,92 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+
+    // iOS 7+: keep content below the navigation bar instead of under it
+    if ([self respondsToSelector:@selector(setEdgesForExtendedLayout:)]) {
+        self.edgesForExtendedLayout = UIRectEdgeNone;
+    }
+
     self.view.backgroundColor = [UIColor whiteColor];
     self.title = @"Now Playing";
 
     CGFloat w = self.view.bounds.size.width;
+    CGFloat top = 30; // top margin from the visible area (below nav bar)
 
-    self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, 40, w - 40, 30)];
-    self.titleLabel.font = [UIFont boldSystemFontOfSize:20];
+    // --- Title ---
+    self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, top, w - 40, 30)];
+    self.titleLabel.font = [UIFont boldSystemFontOfSize:22];
     self.titleLabel.textAlignment = NSTextAlignmentCenter;
     self.titleLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     [self.view addSubview:self.titleLabel];
 
-    self.artistLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, 75, w - 40, 24)];
-    self.artistLabel.font = [UIFont systemFontOfSize:16];
+    // --- Artist ---
+    self.artistLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, top + 36, w - 40, 22)];
+    self.artistLabel.font = [UIFont systemFontOfSize:17];
     self.artistLabel.textColor = [UIColor grayColor];
     self.artistLabel.textAlignment = NSTextAlignmentCenter;
     self.artistLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     [self.view addSubview:self.artistLabel];
 
-    self.progressSlider = [[UISlider alloc] initWithFrame:CGRectMake(20, 140, w - 40, 30)];
+    // --- Album ---
+    self.albumLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, top + 60, w - 40, 18)];
+    self.albumLabel.font = [UIFont systemFontOfSize:13];
+    self.albumLabel.textColor = [UIColor lightGrayColor];
+    self.albumLabel.textAlignment = NSTextAlignmentCenter;
+    self.albumLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+    [self.view addSubview:self.albumLabel];
+
+    // --- Progress slider ---
+    CGFloat sliderY = top + 110;
+    self.progressSlider = [[UISlider alloc] initWithFrame:CGRectMake(20, sliderY, w - 40, 30)];
     self.progressSlider.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     [self.progressSlider addTarget:self action:@selector(sliderTouchDown) forControlEvents:UIControlEventTouchDown];
     [self.progressSlider addTarget:self action:@selector(sliderChanged:) forControlEvents:UIControlEventValueChanged];
     [self.progressSlider addTarget:self action:@selector(sliderTouchUp) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside];
     [self.view addSubview:self.progressSlider];
 
-    self.currentTimeLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, 170, 60, 20)];
+    // --- Current time ---
+    CGFloat timeY = sliderY + 32;
+    self.currentTimeLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, timeY, 55, 18)];
     self.currentTimeLabel.font = [UIFont systemFontOfSize:12];
+    self.currentTimeLabel.autoresizingMask = UIViewAutoresizingFlexibleRightMargin;
     [self.view addSubview:self.currentTimeLabel];
 
-    self.durationLabel = [[UILabel alloc] initWithFrame:CGRectMake(w - 80, 170, 60, 20)];
+    // --- Duration ---
+    self.durationLabel = [[UILabel alloc] initWithFrame:CGRectMake(w - 75, timeY, 55, 18)];
     self.durationLabel.font = [UIFont systemFontOfSize:12];
     self.durationLabel.textAlignment = NSTextAlignmentRight;
     self.durationLabel.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
     [self.view addSubview:self.durationLabel];
 
+    // --- Playback controls ---
+    CGFloat buttonsY = timeY + 50;
+    CGFloat buttonW = 64;
+    CGFloat buttonH = 44;
+    CGFloat gap = 20;
+    CGFloat totalW = buttonW * 3 + gap * 2;
+    CGFloat startX = (w - totalW) / 2;
+
+    // Previous
     UIButton *prevButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    prevButton.frame = CGRectMake(w/2 - 100, 220, 60, 44);
-    [prevButton setTitle:@"Prev" forState:UIControlStateNormal];
+    prevButton.frame = CGRectMake(startX, buttonsY, buttonW, buttonH);
+    [prevButton setTitle:@"◀◀" forState:UIControlStateNormal];
+    prevButton.titleLabel.font = [UIFont systemFontOfSize:20];
     [prevButton addTarget:self action:@selector(previous) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:prevButton];
 
+    // Play / Pause
     self.playPauseButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    self.playPauseButton.frame = CGRectMake(w/2 - 30, 220, 60, 44);
+    self.playPauseButton.frame = CGRectMake(startX + buttonW + gap, buttonsY, buttonW, buttonH);
+    self.playPauseButton.titleLabel.font = [UIFont systemFontOfSize:26];
     [self.playPauseButton addTarget:self action:@selector(togglePlayPause) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:self.playPauseButton];
 
+    // Next
     UIButton *nextButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    nextButton.frame = CGRectMake(w/2 + 40, 220, 60, 44);
-    [nextButton setTitle:@"Next" forState:UIControlStateNormal];
+    nextButton.frame = CGRectMake(startX + (buttonW + gap) * 2, buttonsY, buttonW, buttonH);
+    [nextButton setTitle:@"▶▶" forState:UIControlStateNormal];
+    nextButton.titleLabel.font = [UIFont systemFontOfSize:20];
     [nextButton addTarget:self action:@selector(next) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:nextButton];
 
@@ -74,7 +112,11 @@
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
-    self.updateTimer = [NSTimer scheduledTimerWithTimeInterval:0.5 target:self selector:@selector(refreshUI) userInfo:nil repeats:YES];
+    self.updateTimer = [NSTimer scheduledTimerWithTimeInterval:0.5
+                                                        target:self
+                                                      selector:@selector(refreshUI)
+                                                      userInfo:nil
+                                                       repeats:YES];
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
@@ -90,6 +132,7 @@
 
     self.titleLabel.text = song.title;
     self.artistLabel.text = song.artist;
+    self.albumLabel.text = song.album;
 
     NSTimeInterval duration = [player duration];
     NSTimeInterval current = [player currentTime];
@@ -101,7 +144,7 @@
     self.currentTimeLabel.text = [self formatTime:current];
     self.durationLabel.text = [self formatTime:duration];
 
-    [self.playPauseButton setTitle:player.isPlaying ? @"Pause" : @"Play" forState:UIControlStateNormal];
+    [self.playPauseButton setTitle:player.isPlaying ? @"■" : @"▶" forState:UIControlStateNormal];
 }
 
 - (NSString *)formatTime:(NSTimeInterval)time {

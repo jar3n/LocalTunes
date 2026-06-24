@@ -37,6 +37,11 @@
     self.searchBar.placeholder = @"Search songs or artists";
     self.tableView.tableHeaderView = self.searchBar;
 
+    // iOS 7+ search bar appearance
+    if ([self.searchBar respondsToSelector:@selector(setBarTintColor:)]) {
+        self.searchBar.tintColor = self.navigationController.navigationBar.tintColor;
+    }
+
     self.allSongs = [MusicLibrary sharedLibrary].songs;
     self.filteredSongs = self.allSongs;
 
@@ -122,29 +127,31 @@
     CGRect frame = self.view.bounds;
 
     self.miniPlayerView = [[UIView alloc] initWithFrame:CGRectMake(0, frame.size.height - height, frame.size.width, height)];
-    self.miniPlayerView.backgroundColor = [UIColor colorWithWhite:0.95 alpha:1.0];
+    self.miniPlayerView.backgroundColor = [UIColor colorWithWhite:0.93 alpha:1.0];
     self.miniPlayerView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleTopMargin;
 
+    // Top border
     UIView *topBorder = [[UIView alloc] initWithFrame:CGRectMake(0, 0, frame.size.width, 0.5)];
-    topBorder.backgroundColor = [UIColor colorWithWhite:0.8 alpha:1.0];
+    topBorder.backgroundColor = [UIColor colorWithWhite:0.75 alpha:1.0];
     topBorder.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     [self.miniPlayerView addSubview:topBorder];
 
-    self.miniPlayerLabel = [[UILabel alloc] initWithFrame:CGRectMake(12, 0, frame.size.width - 80, height)];
+    // Song label (tap to open Now Playing)
+    self.miniPlayerLabel = [[UILabel alloc] initWithFrame:CGRectMake(12, 0, frame.size.width - 100, height)];
     self.miniPlayerLabel.font = [UIFont systemFontOfSize:14];
     self.miniPlayerLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-    [self.miniPlayerView addSubview:self.miniPlayerLabel];
-
-    self.miniPlayerPlayPauseButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    self.miniPlayerPlayPauseButton.frame = CGRectMake(frame.size.width - 70, 5, 60, 40);
-    self.miniPlayerPlayPauseButton.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
-    [self.miniPlayerPlayPauseButton setTitle:@"Play" forState:UIControlStateNormal];
-    [self.miniPlayerPlayPauseButton addTarget:self action:@selector(togglePlayPause) forControlEvents:UIControlEventTouchUpInside];
-    [self.miniPlayerView addSubview:self.miniPlayerPlayPauseButton];
-
+    self.miniPlayerLabel.userInteractionEnabled = YES;
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(openNowPlaying)];
     [self.miniPlayerLabel addGestureRecognizer:tap];
-    self.miniPlayerLabel.userInteractionEnabled = YES;
+    [self.miniPlayerView addSubview:self.miniPlayerLabel];
+
+    // Play / Pause button
+    self.miniPlayerPlayPauseButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    self.miniPlayerPlayPauseButton.frame = CGRectMake(frame.size.width - 80, 5, 65, 40);
+    self.miniPlayerPlayPauseButton.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
+    self.miniPlayerPlayPauseButton.titleLabel.font = [UIFont systemFontOfSize:20];
+    [self.miniPlayerPlayPauseButton addTarget:self action:@selector(togglePlayPause) forControlEvents:UIControlEventTouchUpInside];
+    [self.miniPlayerView addSubview:self.miniPlayerPlayPauseButton];
 
     [self.view addSubview:self.miniPlayerView];
     self.tableView.contentInset = UIEdgeInsetsMake(0, 0, height, 0);
@@ -157,7 +164,7 @@
     } else {
         self.miniPlayerLabel.text = @"No song playing";
     }
-    NSString *title = [PlayerController sharedPlayer].isPlaying ? @"Pause" : @"Play";
+    NSString *title = [PlayerController sharedPlayer].isPlaying ? @"■" : @"▶";
     [self.miniPlayerPlayPauseButton setTitle:title forState:UIControlStateNormal];
 }
 
@@ -193,6 +200,8 @@
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellId];
     if (!cell) {
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:cellId];
+        // iOS 7+ disclosure indicator style
+        cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     }
     Song *song = self.filteredSongs[indexPath.row];
     cell.textLabel.text = song.title;
