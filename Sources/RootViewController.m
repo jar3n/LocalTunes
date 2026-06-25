@@ -3,13 +3,14 @@
 #import "PlayerController.h"
 #import "NowPlayingViewController.h"
 
-@interface RootViewController () <PlayerControllerDelegate, UISearchBarDelegate>
+@interface RootViewController () <PlayerControllerDelegate, UISearchBarDelegate, UIScrollViewDelegate>
 @property (nonatomic, strong) UIView *miniPlayerView;
 @property (nonatomic, strong) UILabel *miniPlayerLabel;
 @property (nonatomic, strong) UIButton *miniPlayerPlayPauseButton;
 @property (nonatomic, strong) UISearchBar *searchBar;
 @property (nonatomic, strong) NSArray<Song *> *allSongs;
 @property (nonatomic, strong) NSArray<Song *> *filteredSongs;
+@property (nonatomic, assign) BOOL searchBarActive;
 @end
 
 @implementation RootViewController
@@ -180,15 +181,28 @@
 }
 
 - (void)searchBarTextDidBeginEditing:(UISearchBar *)searchBar {
+    self.searchBarActive = YES;
     [searchBar setShowsCancelButton:YES animated:YES];
 }
 
 - (void)searchBarTextDidEndEditing:(UISearchBar *)searchBar {
+    self.searchBarActive = NO;
     [searchBar setShowsCancelButton:NO animated:YES];
 }
 
 - (void)dismissKeyboard {
     [self.searchBar resignFirstResponder];
+}
+
+#pragma mark - UIScrollViewDelegate
+
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+    if (self.searchBarActive) {
+        CGFloat minOffset = -scrollView.contentInset.top;
+        if (scrollView.contentOffset.y < minOffset) {
+            scrollView.contentOffset = CGPointMake(0, minOffset);
+        }
+    }
 }
 
 - (void)showFolderPath {
