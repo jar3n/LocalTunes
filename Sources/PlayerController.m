@@ -61,7 +61,12 @@
 }
 
 - (void)playQueue:(NSArray<Song *> *)songs startingAtIndex:(NSInteger)index {
-    // Stop current playback before switching to a new song
+    self.queue = songs;
+    self.currentIndex = index;
+    [self playCurrent];
+}
+
+- (void)stopCurrent {
     if (self.isOGG) {
         [self.oggPlayer stop];
         self.oggPlayer = nil;
@@ -69,15 +74,14 @@
         [self.audioPlayer stop];
         self.audioPlayer = nil;
     }
-
-    self.queue = songs;
-    self.currentIndex = index;
-    [self playCurrent];
 }
 
 - (void)playCurrent {
     Song *song = [self currentSong];
     if (!song) return;
+
+    // Stop whatever is currently playing
+    [self stopCurrent];
 
     // Check if this is an OGG file
     NSString *ext = [[song.filePath pathExtension] lowercaseString];
