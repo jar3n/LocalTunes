@@ -46,7 +46,15 @@
     self.searchBar.barStyle = UIBarStyleBlack;
     self.searchBar.searchBarStyle = UISearchBarStyleMinimal;
     self.searchBar.tintColor = [UIColor colorWithRed:0.35 green:0.96 blue:0.31 alpha:1.0];
-    self.tableView.tableHeaderView = self.searchBar;
+
+    // Wrap in a container so iOS doesn't reposition the search bar when active
+    UIView *headerContainer = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, 44)];
+    headerContainer.backgroundColor = [UIColor clearColor];
+    headerContainer.clipsToBounds = YES;
+    self.searchBar.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+    self.searchBar.frame = headerContainer.bounds;
+    [headerContainer addSubview:self.searchBar];
+    self.tableView.tableHeaderView = headerContainer;
 
     // iOS 7+ search bar appearance
     if ([self.searchBar respondsToSelector:@selector(setBarTintColor:)]) {
@@ -173,13 +181,10 @@
 
 - (void)searchBarTextDidBeginEditing:(UISearchBar *)searchBar {
     [searchBar setShowsCancelButton:YES animated:YES];
-    // Keep the search bar pinned below the navigation bar
-    [self.tableView setContentOffset:CGPointMake(0, -self.tableView.contentInset.top) animated:YES];
 }
 
 - (void)searchBarTextDidEndEditing:(UISearchBar *)searchBar {
     [searchBar setShowsCancelButton:NO animated:YES];
-    [self.tableView setContentOffset:CGPointMake(0, -self.tableView.contentInset.top) animated:YES];
 }
 
 - (void)dismissKeyboard {
