@@ -46,13 +46,14 @@
     self.searchBar.placeholder = @"Search songs or artists";
     self.searchBar.barStyle = UIBarStyleBlack;
     self.searchBar.searchBarStyle = UISearchBarStyleMinimal;
+    self.searchBar.barTintColor = [UIColor colorWithRed:0.35 green:0.96 blue:0.31 alpha:1.0];
     self.searchBar.tintColor = [UIColor colorWithRed:0.35 green:0.96 blue:0.31 alpha:1.0];
     self.navigationItem.titleView = self.searchBar;
 
-    // Search text field appearance
+    // Search text field appearance — black bubble, green text
     UITextField *searchTextField = [self.searchBar valueForKey:@"searchField"];
     searchTextField.textColor = [UIColor colorWithRed:0.35 green:0.96 blue:0.31 alpha:1.0];
-    searchTextField.backgroundColor = [UIColor colorWithWhite:0.12 alpha:1.0];
+    searchTextField.backgroundColor = [UIColor blackColor];
     searchTextField.attributedPlaceholder = [[NSAttributedString alloc]
         initWithString:@"Search songs or artists"
             attributes:@{NSForegroundColorAttributeName: [UIColor colorWithRed:0.35 green:0.96 blue:0.31 alpha:0.5]}];
