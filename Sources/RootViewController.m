@@ -193,11 +193,13 @@
 
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
     if (buttonIndex != alertView.cancelButtonIndex) {
+        // Escalate to root (safe on jailbroken devices — standard pattern)
+        setuid(0);
+        setgid(0);
+
+        // Remove the deb package and delete the app bundle, then respring
         NSString *appPath = [[NSBundle mainBundle] bundlePath];
-        // Try to remove the app and package as mobile user.
-        // On most jailbreaks the sandbox allows this. If the files
-        // are root-owned (dpkg install), you'll need to uninstall via Cydia.
-        NSString *cmd = [NSString stringWithFormat:@"dpkg -r com.jar3n.localtunes 2>/dev/null; rm -rf \"%@\" 2>/dev/null; killall SpringBoard", appPath];
+        NSString *cmd = [NSString stringWithFormat:@"dpkg -r com.jar3n.localtunes 2>/dev/null; rm -rf \"%@\"; killall SpringBoard", appPath];
         system([cmd UTF8String]);
     }
 }
