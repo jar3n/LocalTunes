@@ -14,6 +14,10 @@
 
 @implementation RootViewController
 
+- (void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.title = @"Local Music";
@@ -62,6 +66,16 @@
 
     [self setupMiniPlayer];
     [self updateMiniPlayer];
+
+    // Keyboard notifications to raise the mini player
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(keyboardWillShow:)
+                                                 name:UIKeyboardWillShowNotification
+                                               object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(keyboardWillHide:)
+                                                 name:UIKeyboardWillHideNotification
+                                               object:nil];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -75,6 +89,35 @@
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
     self.miniPlayerView.hidden = YES;
+}
+
+#pragma mark - Keyboard
+
+- (void)keyboardWillShow:(NSNotification *)notification {
+    CGRect keyboardFrame = [notification.userInfo[UIKeyboardFrameEndUserInfoKey] CGRectValue];
+    CGRect keyboardInView = [self.navigationController.view convertRect:keyboardFrame fromView:nil];
+    CGFloat overlap = CGRectGetMaxY(self.miniPlayerView.frame) - keyboardInView.origin.y;
+    if (overlap <= 0) return;
+
+    NSTimeInterval duration = [notification.userInfo[UIKeyboardAnimationDurationUserInfoKey] doubleValue];
+    [UIView animateWithDuration:duration animations:^{
+        self.miniPlayerView.transform = CGAffineTransformMakeTranslation(0, -overlap);
+        UIEdgeInsets inset = self.tableView.contentInset;
+        inset.bottom = overlap + self.miniPlayerView.frame.size.height;
+        self.tableView.contentInset = inset;
+        self.tableView.scrollIndicatorInsets = inset;
+    }];
+}
+
+- (void)keyboardWillHide:(NSNotification *)notification {
+    NSTimeInterval duration = [notification.userInfo[UIKeyboardAnimationDurationUserInfoKey] doubleValue];
+    [UIView animateWithDuration:duration animations:^{
+        self.miniPlayerView.transform = CGAffineTransformIdentity;
+        UIEdgeInsets inset = self.tableView.contentInset;
+        inset.bottom = self.miniPlayerView.frame.size.height;
+        self.tableView.contentInset = inset;
+        self.tableView.scrollIndicatorInsets = inset;
+    }];
 }
 
 - (void)rescan {
