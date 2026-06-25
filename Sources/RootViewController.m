@@ -66,9 +66,15 @@
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
+    self.miniPlayerView.hidden = NO;
     self.allSongs = [MusicLibrary sharedLibrary].songs;
     [self filterSongsWithSearchText:self.searchBar.text];
     [self updateMiniPlayer];
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    self.miniPlayerView.hidden = YES;
 }
 
 - (void)rescan {
