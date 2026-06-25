@@ -3,14 +3,13 @@
 #import "PlayerController.h"
 #import "NowPlayingViewController.h"
 
-@interface RootViewController () <PlayerControllerDelegate, UISearchBarDelegate, UIScrollViewDelegate>
+@interface RootViewController () <PlayerControllerDelegate, UISearchBarDelegate>
 @property (nonatomic, strong) UIView *miniPlayerView;
 @property (nonatomic, strong) UILabel *miniPlayerLabel;
 @property (nonatomic, strong) UIButton *miniPlayerPlayPauseButton;
 @property (nonatomic, strong) UISearchBar *searchBar;
 @property (nonatomic, strong) NSArray<Song *> *allSongs;
 @property (nonatomic, strong) NSArray<Song *> *filteredSongs;
-@property (nonatomic, assign) BOOL searchBarActive;
 @end
 
 @implementation RootViewController
@@ -41,26 +40,14 @@
 
     [PlayerController sharedPlayer].delegate = self;
 
+    // Search bar in the navigation bar — fixed at top, never scrolls
     self.searchBar = [[UISearchBar alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, 44)];
     self.searchBar.delegate = self;
     self.searchBar.placeholder = @"Search songs or artists";
     self.searchBar.barStyle = UIBarStyleBlack;
     self.searchBar.searchBarStyle = UISearchBarStyleMinimal;
     self.searchBar.tintColor = [UIColor colorWithRed:0.35 green:0.96 blue:0.31 alpha:1.0];
-
-    // Wrap in a container so iOS doesn't reposition the search bar when active
-    UIView *headerContainer = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, 44)];
-    headerContainer.backgroundColor = [UIColor clearColor];
-    headerContainer.clipsToBounds = YES;
-    self.searchBar.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-    self.searchBar.frame = headerContainer.bounds;
-    [headerContainer addSubview:self.searchBar];
-    self.tableView.tableHeaderView = headerContainer;
-
-    // iOS 7+ search bar appearance
-    if ([self.searchBar respondsToSelector:@selector(setBarTintColor:)]) {
-        self.searchBar.tintColor = self.navigationController.navigationBar.tintColor;
-    }
+    self.navigationItem.titleView = self.searchBar;
 
     // Search text field appearance
     UITextField *searchTextField = [self.searchBar valueForKey:@"searchField"];
@@ -70,11 +57,8 @@
         initWithString:@"Search songs or artists"
             attributes:@{NSForegroundColorAttributeName: [UIColor colorWithRed:0.35 green:0.96 blue:0.31 alpha:0.5]}];
 
-    // Dismiss keyboard when scrolling or tapping the table
+    // Dismiss keyboard when scrolling the table
     self.tableView.keyboardDismissMode = UIScrollViewKeyboardDismissModeOnDrag;
-    UITapGestureRecognizer *tableTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(dismissKeyboard)];
-    tableTap.cancelsTouchesInView = NO;
-    [self.tableView addGestureRecognizer:tableTap];
 
     self.allSongs = [MusicLibrary sharedLibrary].songs;
     self.filteredSongs = self.allSongs;
@@ -181,28 +165,11 @@
 }
 
 - (void)searchBarTextDidBeginEditing:(UISearchBar *)searchBar {
-    self.searchBarActive = YES;
     [searchBar setShowsCancelButton:YES animated:YES];
 }
 
 - (void)searchBarTextDidEndEditing:(UISearchBar *)searchBar {
-    self.searchBarActive = NO;
     [searchBar setShowsCancelButton:NO animated:YES];
-}
-
-- (void)dismissKeyboard {
-    [self.searchBar resignFirstResponder];
-}
-
-#pragma mark - UIScrollViewDelegate
-
-- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
-    if (self.searchBarActive) {
-        CGFloat minOffset = -scrollView.contentInset.top;
-        if (scrollView.contentOffset.y < minOffset) {
-            scrollView.contentOffset = CGPointMake(0, minOffset);
-        }
-    }
 }
 
 - (void)showFolderPath {
