@@ -8,7 +8,6 @@ APPLICATION_NAME = LocalTunes
 LocalTunes_FILES = $(wildcard Sources/*.m)
 LocalTunes_FRAMEWORKS = UIKit Foundation CoreGraphics AVFoundation MediaPlayer
 LocalTunes_CFLAGS = -fobjc-arc -fno-modules
-LocalTunes_LDFLAGS = -Wl,-w
-ADDITIONAL_CFLAGS = -fno-modules
+LocalTunes_LDFLAGS = -Wl,-w -L/opt/local/lib -lvorbisfile -lvorbis -logg -lc -lSystem
 
 include $(THEOS_MAKE_PATH)/application.mk

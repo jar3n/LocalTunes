@@ -5,11 +5,9 @@ on:
     branches: ["**"]
   workflow_dispatch:
 
-# Lets the deploy job publish to GitHub Pages.
+# Needed for peaceiris/actions-gh-pages to push to gh-pages branch.
 permissions:
   contents: write
-  pages: write
-  id-token: write
 
 concurrency:
   group: "${{ github.ref_name }}"
@@ -26,8 +24,8 @@ jobs:
       - name: Mark as test build on non-main branches
         if: github.ref_name != 'main'
         run: |
-          sed -i 's/^Name: .*/& (Test)/' control
-          sed -i 's/^Version: .*/&-test/' control
+          sed -i 's/^Name: .*/& (${{ github.ref_name }})/' control
+          sed -i 's/^Version: .*/&-${{ github.ref_name }}/' control
 
       - name: Build inside container
         run: ./build-in-container.sh
@@ -45,24 +43,31 @@ jobs:
           python3 tools/generate_repo.py control "$DEB" public
           cp Resources/app_icon_normal.png public/CydiaIcon.png
 
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: public
+      - name: Determine deploy directory for Pages
+        id: deploy-dir
+        run: |
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            echo "dir=." >> "$GITHUB_OUTPUT"
+          else
+            echo "dir=test/${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+          fi
 
-  deploy:
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          destination_dir: ${{ steps.deploy-dir.outputs.dir }}
+          # Main → clean root deploy (wipes old test subdirs, which is fine).
+          # Test branches → preserve other test subdirs.
+          keep_files: ${{ github.ref_name != 'main' }}
+
+  bump-version:
     if: github.ref_name == 'main'
     needs: build
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-
-      - name: Checkout again (needed for version bump commit)
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           ref: main

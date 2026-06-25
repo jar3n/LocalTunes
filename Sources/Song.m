@@ -1,6 +1,7 @@
 #import "Song.h"
 #import <AVFoundation/AVFoundation.h>
 #import <UIKit/UIImage.h>
+#import <vorbis/vorbisfile.h>
 
 @implementation Song
 
@@ -19,6 +20,15 @@
 }
 
 - (void)loadMetadata {
+    NSString *ext = [[self.filePath pathExtension] lowercaseString];
+    if ([ext isEqualToString:@"ogg"]) {
+        [self loadOGGMetadata];
+    } else {
+        [self loadAVMetadata];
+    }
+}
+
+- (void)loadAVMetadata {
     NSURL *url = [NSURL fileURLWithPath:self.filePath];
     AVURLAsset *asset = [AVURLAsset URLAssetWithURL:url options:nil];
 
@@ -46,6 +56,49 @@
             }
         }
     }
+}
+
+- (void)loadOGGMetadata {
+    FILE *fp = fopen([self.filePath UTF8String], "rb");
+    if (!fp) return;
+
+    OggVorbis_File vf;
+    if (ov_open(fp, &vf, NULL, 0) < 0) {
+        fclose(fp);
+        return;
+    }
+
+    // Duration
+    double total = ov_time_total(&vf, -1);
+    if (total >= 0) {
+        self.duration = total;
+    }
+
+    // Vorbis comments (metadata)
+    vorbis_comment *vc = ov_comment(&vf, -1);
+    if (vc) {
+        for (int i = 0; i < vc->comments; i++) {
+            NSString *comment = [NSString stringWithUTF8String:vc->user_comments[i]];
+            if (comment.length == 0) continue;
+
+            NSRange eq = [comment rangeOfString:@"="];
+            if (eq.location == NSNotFound || eq.location == 0) continue;
+
+            NSString *key = [[comment substringToIndex:eq.location] uppercaseString];
+            NSString *value = [comment substringFromIndex:eq.location + 1];
+            if (value.length == 0) continue;
+
+            if ([key isEqualToString:@"TITLE"]) {
+                self.title = value;
+            } else if ([key isEqualToString:@"ARTIST"]) {
+                self.artist = value;
+            } else if ([key isEqualToString:@"ALBUM"]) {
+                self.album = value;
+            }
+        }
+    }
+
+    ov_clear(&vf);
 }
 
 @end

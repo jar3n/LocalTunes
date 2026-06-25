@@ -25,7 +25,9 @@
         self.edgesForExtendedLayout = UIRectEdgeNone;
     }
 
-    self.view.backgroundColor = [UIColor whiteColor];
+    UIColor *greenColor = [UIColor colorWithRed:0.35 green:0.96 blue:0.31 alpha:1.0];
+
+    self.view.backgroundColor = [UIColor blackColor];
     self.title = @"Now Playing";
 
     CGFloat w = self.view.bounds.size.width;
@@ -35,7 +37,7 @@
     self.artworkImageView = [[UIImageView alloc] initWithFrame:CGRectMake((w - artworkSize) / 2, 10, artworkSize, artworkSize)];
     self.artworkImageView.contentMode = UIViewContentModeScaleAspectFill;
     self.artworkImageView.clipsToBounds = YES;
-    self.artworkImageView.layer.borderColor = [UIColor colorWithWhite:0.85 alpha:1.0].CGColor;
+    self.artworkImageView.layer.borderColor = greenColor.CGColor;
     self.artworkImageView.layer.borderWidth = 1;
     self.artworkImageView.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
     [self.view addSubview:self.artworkImageView];
@@ -44,6 +46,7 @@
     CGFloat titleY = 200;
     self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, titleY, w - 40, 30)];
     self.titleLabel.font = [UIFont boldSystemFontOfSize:22];
+    self.titleLabel.textColor = greenColor;
     self.titleLabel.textAlignment = NSTextAlignmentCenter;
     self.titleLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     [self.view addSubview:self.titleLabel];
@@ -51,7 +54,7 @@
     // --- Artist ---
     self.artistLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, titleY + 36, w - 40, 22)];
     self.artistLabel.font = [UIFont systemFontOfSize:17];
-    self.artistLabel.textColor = [UIColor grayColor];
+    self.artistLabel.textColor = [UIColor colorWithRed:0.35 green:0.96 blue:0.31 alpha:0.8];
     self.artistLabel.textAlignment = NSTextAlignmentCenter;
     self.artistLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     [self.view addSubview:self.artistLabel];
@@ -59,7 +62,7 @@
     // --- Album ---
     self.albumLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, titleY + 60, w - 40, 18)];
     self.albumLabel.font = [UIFont systemFontOfSize:13];
-    self.albumLabel.textColor = [UIColor lightGrayColor];
+    self.albumLabel.textColor = [UIColor colorWithRed:0.35 green:0.96 blue:0.31 alpha:0.6];
     self.albumLabel.textAlignment = NSTextAlignmentCenter;
     self.albumLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     [self.view addSubview:self.albumLabel];
@@ -68,6 +71,9 @@
     CGFloat sliderY = titleY + 110;
     self.progressSlider = [[UISlider alloc] initWithFrame:CGRectMake(20, sliderY, w - 40, 30)];
     self.progressSlider.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+    self.progressSlider.minimumTrackTintColor = greenColor;
+    self.progressSlider.maximumTrackTintColor = [UIColor colorWithWhite:0.25 alpha:1.0];
+    self.progressSlider.thumbTintColor = greenColor;
     [self.progressSlider addTarget:self action:@selector(sliderTouchDown) forControlEvents:UIControlEventTouchDown];
     [self.progressSlider addTarget:self action:@selector(sliderChanged:) forControlEvents:UIControlEventValueChanged];
     [self.progressSlider addTarget:self action:@selector(sliderTouchUp) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside];
@@ -77,12 +83,14 @@
     CGFloat timeY = sliderY + 32;
     self.currentTimeLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, timeY, 55, 18)];
     self.currentTimeLabel.font = [UIFont systemFontOfSize:12];
+    self.currentTimeLabel.textColor = greenColor;
     self.currentTimeLabel.autoresizingMask = UIViewAutoresizingFlexibleRightMargin;
     [self.view addSubview:self.currentTimeLabel];
 
     // --- Duration ---
     self.durationLabel = [[UILabel alloc] initWithFrame:CGRectMake(w - 75, timeY, 55, 18)];
     self.durationLabel.font = [UIFont systemFontOfSize:12];
+    self.durationLabel.textColor = greenColor;
     self.durationLabel.textAlignment = NSTextAlignmentRight;
     self.durationLabel.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
     [self.view addSubview:self.durationLabel];
@@ -99,7 +107,8 @@
     UIButton *prevButton = [UIButton buttonWithType:UIButtonTypeCustom];
     prevButton.frame = CGRectMake(startX, buttonsY, buttonW, buttonH);
     prevButton.imageView.contentMode = UIViewContentModeScaleAspectFit;
-    [prevButton setImage:[UIImage imageNamed:@"rewind2"] forState:UIControlStateNormal];
+    [prevButton setImage:[[UIImage imageNamed:@"rewind2"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
+    prevButton.tintColor = greenColor;
     [prevButton addTarget:self action:@selector(previous) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:prevButton];
 
@@ -107,7 +116,8 @@
     self.playPauseButton = [UIButton buttonWithType:UIButtonTypeCustom];
     self.playPauseButton.frame = CGRectMake(startX + buttonW + gap, buttonsY, buttonW, buttonH);
     self.playPauseButton.imageView.contentMode = UIViewContentModeScaleAspectFit;
-    [self.playPauseButton setImage:[UIImage imageNamed:@"play2"] forState:UIControlStateNormal];
+    [self.playPauseButton setImage:[[UIImage imageNamed:@"play2"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
+    self.playPauseButton.tintColor = greenColor;
     [self.playPauseButton addTarget:self action:@selector(togglePlayPause) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:self.playPauseButton];
 
@@ -115,7 +125,8 @@
     UIButton *nextButton = [UIButton buttonWithType:UIButtonTypeCustom];
     nextButton.frame = CGRectMake(startX + (buttonW + gap) * 2, buttonsY, buttonW, buttonH);
     nextButton.imageView.contentMode = UIViewContentModeScaleAspectFit;
-    [nextButton setImage:[UIImage imageNamed:@"forward2"] forState:UIControlStateNormal];
+    [nextButton setImage:[[UIImage imageNamed:@"forward2"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
+    nextButton.tintColor = greenColor;
     [nextButton addTarget:self action:@selector(next) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:nextButton];
 
