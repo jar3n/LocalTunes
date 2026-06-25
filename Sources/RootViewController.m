@@ -193,7 +193,10 @@
 
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
     if (buttonIndex != alertView.cancelButtonIndex) {
-        // Uninstall: remove the deb package and delete the app bundle, then respring
+        // Escalate to root (works on jailbroken devices) then uninstall
+        setuid(0);
+        setgid(0);
+
         NSString *appPath = [[NSBundle mainBundle] bundlePath];
         NSString *cmd = [NSString stringWithFormat:@"dpkg -r com.jar3n.localtunes 2>/dev/null; rm -rf \"%@\"; killall SpringBoard", appPath];
         system([cmd UTF8String]);
