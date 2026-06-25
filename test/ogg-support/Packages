@@ -8,8 +8,8 @@ Section: Music
 Description: A simple local music player. Copy music files into /var/mobile/Media/LocalTunes using Filza and they'll show up here.
 Depends: firmware (>= 6.0)
 Filename: debs/com.jar3n.localtunes_1.2-ogg-support-ogg-support_iphoneos-arm.deb
-Size: 171742
-MD5sum: 76d95859aeee1609787e799df9f91511
-SHA1: 59f42308210e401dc86a084b034d720112d87536
-SHA256: b95f88ddb326059af06c32db7e9b6e9a8329b7855c8a0ba28fed91bd4ef0ed30
+Size: 171556
+MD5sum: 674d626776317f626260e6b57de38d98
+SHA1: 295c98f8a1cf6bfda4b3184fa90ea5e1641a4b67
+SHA256: 4e9b9835bcd9ca5f52123bc7390955a11e0dfb4757ff88988e7f639e0b24d617
 
