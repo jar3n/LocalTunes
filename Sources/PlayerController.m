@@ -61,6 +61,15 @@
 }
 
 - (void)playQueue:(NSArray<Song *> *)songs startingAtIndex:(NSInteger)index {
+    // Stop current playback before switching to a new song
+    if (self.isOGG) {
+        [self.oggPlayer stop];
+        self.oggPlayer = nil;
+    } else {
+        [self.audioPlayer stop];
+        self.audioPlayer = nil;
+    }
+
     self.queue = songs;
     self.currentIndex = index;
     [self playCurrent];

@@ -139,22 +139,26 @@
 
 - (void)setupMiniPlayer {
     CGFloat height = 50;
-    CGRect frame = self.view.bounds;
 
     UIColor *greenColor = [UIColor colorWithRed:0.35 green:0.96 blue:0.31 alpha:1.0];
 
-    self.miniPlayerView = [[UIView alloc] initWithFrame:CGRectMake(0, frame.size.height - height, frame.size.width, height)];
+    // Use navigation controller's view so the bar stays fixed (doesn't scroll with table)
+    UIView *parentView = self.navigationController.view;
+    CGRect parentFrame = parentView.bounds;
+
+    self.miniPlayerView = [[UIView alloc] initWithFrame:CGRectMake(0, parentFrame.size.height - height, parentFrame.size.width, height)];
     self.miniPlayerView.backgroundColor = [UIColor colorWithWhite:0.08 alpha:1.0];
     self.miniPlayerView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleTopMargin;
 
     // Top border
-    UIView *topBorder = [[UIView alloc] initWithFrame:CGRectMake(0, 0, frame.size.width, 0.5)];
+    UIView *topBorder = [[UIView alloc] initWithFrame:CGRectMake(0, 0, parentFrame.size.width, 0.5)];
     topBorder.backgroundColor = greenColor;
     topBorder.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     [self.miniPlayerView addSubview:topBorder];
 
     // Song label (tap to open Now Playing)
-    self.miniPlayerLabel = [[UILabel alloc] initWithFrame:CGRectMake(12, 0, frame.size.width - 110, height)];
+    CGFloat labelWidth = parentFrame.size.width - 90;
+    self.miniPlayerLabel = [[UILabel alloc] initWithFrame:CGRectMake(12, 0, labelWidth, height)];
     self.miniPlayerLabel.font = [UIFont systemFontOfSize:14];
     self.miniPlayerLabel.textColor = greenColor;
     self.miniPlayerLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
@@ -163,17 +167,18 @@
     [self.miniPlayerLabel addGestureRecognizer:tap];
     [self.miniPlayerView addSubview:self.miniPlayerLabel];
 
-    // Play / Pause button
+    // Play / Pause button (smaller)
     self.miniPlayerPlayPauseButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    self.miniPlayerPlayPauseButton.frame = CGRectMake(frame.size.width - 100, 3, 85, 44);
+    self.miniPlayerPlayPauseButton.frame = CGRectMake(parentFrame.size.width - 60, 10, 44, 30);
     self.miniPlayerPlayPauseButton.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
     self.miniPlayerPlayPauseButton.imageView.contentMode = UIViewContentModeScaleAspectFit;
-    [self.miniPlayerPlayPauseButton setImage:[[self.miniPlayerPlayPauseButton imageForState:UIControlStateNormal] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
+    [self.miniPlayerPlayPauseButton setImage:[[UIImage imageNamed:@"play2"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
+    [self.miniPlayerPlayPauseButton setImage:[[UIImage imageNamed:@"pause2"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateSelected];
     self.miniPlayerPlayPauseButton.tintColor = greenColor;
     [self.miniPlayerPlayPauseButton addTarget:self action:@selector(togglePlayPause) forControlEvents:UIControlEventTouchUpInside];
     [self.miniPlayerView addSubview:self.miniPlayerPlayPauseButton];
 
-    [self.view addSubview:self.miniPlayerView];
+    [parentView addSubview:self.miniPlayerView];
     self.tableView.contentInset = UIEdgeInsetsMake(0, 0, height, 0);
 }
 
@@ -184,8 +189,10 @@
     } else {
         self.miniPlayerLabel.text = @"No song playing";
     }
-    UIImage *icon = [PlayerController sharedPlayer].isPlaying ? [UIImage imageNamed:@"pause2"] : [UIImage imageNamed:@"play2"];
-    [self.miniPlayerPlayPauseButton setImage:icon forState:UIControlStateNormal];
+    BOOL playing = [PlayerController sharedPlayer].isPlaying;
+    self.miniPlayerPlayPauseButton.selected = playing;
+    UIImage *icon = playing ? [UIImage imageNamed:@"pause2"] : [UIImage imageNamed:@"play2"];
+    [self.miniPlayerPlayPauseButton setImage:[icon imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
 }
 
 - (void)togglePlayPause {
