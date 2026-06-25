@@ -61,6 +61,12 @@
         initWithString:@"Search songs or artists"
             attributes:@{NSForegroundColorAttributeName: [UIColor colorWithRed:0.35 green:0.96 blue:0.31 alpha:0.5]}];
 
+    // Dismiss keyboard when scrolling or tapping the table
+    self.tableView.keyboardDismissMode = UIScrollViewKeyboardDismissModeOnDrag;
+    UITapGestureRecognizer *tableTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(dismissKeyboard)];
+    tableTap.cancelsTouchesInView = NO;
+    [self.tableView addGestureRecognizer:tableTap];
+
     self.allSongs = [MusicLibrary sharedLibrary].songs;
     self.filteredSongs = self.allSongs;
 
@@ -171,6 +177,10 @@
 
 - (void)searchBarTextDidEndEditing:(UISearchBar *)searchBar {
     [searchBar setShowsCancelButton:NO animated:YES];
+}
+
+- (void)dismissKeyboard {
+    [self.searchBar resignFirstResponder];
 }
 
 - (void)showFolderPath {
