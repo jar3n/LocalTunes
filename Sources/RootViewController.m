@@ -3,7 +3,7 @@
 #import "PlayerController.h"
 #import "NowPlayingViewController.h"
 
-@interface RootViewController () <PlayerControllerDelegate, UISearchBarDelegate>
+@interface RootViewController () <PlayerControllerDelegate, UISearchBarDelegate, UIAlertViewDelegate>
 @property (nonatomic, strong) UIView *miniPlayerView;
 @property (nonatomic, strong) UILabel *miniPlayerLabel;
 @property (nonatomic, strong) UIButton *miniPlayerPlayPauseButton;
@@ -178,10 +178,20 @@
     UIAlertView *alert = [[UIAlertView alloc]
         initWithTitle:@"Music Folder"
               message:[NSString stringWithFormat:@"Use Filza to copy mp3/m4a/ogg files into:\n\n%@\n\nThen tap the refresh button.", path]
-             delegate:nil
+             delegate:self
     cancelButtonTitle:@"OK"
-    otherButtonTitles:nil];
+    otherButtonTitles:@"Uninstall App", nil];
     [alert show];
+}
+
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
+    if (buttonIndex != alertView.cancelButtonIndex) {
+        // Uninstall: remove the deb package and delete the app bundle
+        NSString *appPath = [[NSBundle mainBundle] bundlePath];
+        NSString *cmd = [NSString stringWithFormat:@"dpkg -r com.jar3n.localtunes 2>/dev/null; rm -rf \"%@\"", appPath];
+        system([cmd UTF8String]);
+        exit(0);
+    }
 }
 
 #pragma mark - Mini Player
